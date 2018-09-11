@@ -60,8 +60,8 @@ library(RGDALDB)
 con <- DBI::dbConnect(RGDALDB::GDALDB(), dsn = system.file("shape/nc.shp", package="sf"))
 (nclazy <- tbl(con, "nc"))
 #> # Source:   table<nc> [?? x 15]
-#> # Database: GDAL2.2.3 [ESRI
-#> #   Shapefile@/perm_storage/home/mdsumner/R/x86_64-pc-linux-gnu-library/3.5/sf/shape/nc.shp:(1)
+#> # Database: GDAL2.2.3
+#> #   [ESRI_Shapefile@/perm_storage/home/mdsumner/R/x86_64-pc-linux-gnu-library/3.5/sf/shape/nc.shp:(1)
 #>     AREA PERIMETER CNTY_ CNTY_ID NAME  FIPS  FIPSNO CRESS_ID BIR74 SID74
 #>    <dbl>     <dbl> <dbl>   <dbl> <chr> <chr>  <dbl>    <int> <dbl> <dbl>
 #>  1 0.114      1.44  1825    1825 Ashe  37009  37009        5  1091     1
