@@ -41,7 +41,8 @@ devtools::install_github("mdsumner/RGDALDB")
 
 ## Example
 
-Rough and ready examples
+A pretty good example, ideally no data is read until `collect()` is
+called.
 
 ``` r
 library(dplyr)
@@ -54,12 +55,51 @@ library(dplyr)
 #> 
 #>     intersect, setdiff, setequal, union
 library(DBI)
+library(RGDALDB)
+
+con <- DBI::dbConnect(RGDALDB::GDALDB(), dsn = system.file("shape/nc.shp", package="sf"))
+(nclazy <- tbl(con, "nc"))
+#> # Source:   table<nc> [?? x 15]
+#> # Database: GDAL2.2.3 [ESRI
+#> #   Shapefile@/perm_storage/home/mdsumner/R/x86_64-pc-linux-gnu-library/3.5/sf/shape/nc.shp:(1)
+#>     AREA PERIMETER CNTY_ CNTY_ID NAME  FIPS  FIPSNO CRESS_ID BIR74 SID74
+#>    <dbl>     <dbl> <dbl>   <dbl> <chr> <chr>  <dbl>    <int> <dbl> <dbl>
+#>  1 0.114      1.44  1825    1825 Ashe  37009  37009        5  1091     1
+#>  2 0.061      1.23  1827    1827 Alle… 37005  37005        3   487     0
+#>  3 0.143      1.63  1828    1828 Surry 37171  37171       86  3188     5
+#>  4 0.07       2.97  1831    1831 Curr… 37053  37053       27   508     1
+#>  5 0.153      2.21  1832    1832 Nort… 37131  37131       66  1421     9
+#>  6 0.097      1.67  1833    1833 Hert… 37091  37091       46  1452     7
+#>  7 0.062      1.55  1834    1834 Camd… 37029  37029       15   286     0
+#>  8 0.091      1.28  1835    1835 Gates 37073  37073       37   420     0
+#>  9 0.118      1.42  1836    1836 Warr… 37185  37185       93   968     4
+#> 10 0.124      1.43  1837    1837 Stok… 37169  37169       85  1612     1
+#> # ... with more rows, and 5 more variables: NWBIR74 <dbl>, BIR79 <dbl>,
+#> #   SID79 <dbl>, NWBIR79 <dbl>, `_ogr_geometry_` <MULTIPOLYGON [°]>
+
+library(sf)
+#> Linking to GEOS 3.6.2, GDAL 2.2.3, proj.4 4.9.3
+nclazy %>% 
+  dplyr::filter(AREA > .1) %>% 
+  dplyr::select(AREA, PERIMETER, BIR74, FIPS) %>% 
+  collect() %>%  
+  plot()
+```
+
+<img src="man/figures/README-example-1.png" width="100%" />
+
+Rough and ready examples
+
+``` r
+library(dplyr)
+library(DBI)
 con <- DBI::dbConnect(RGDALDB::GDALDB(), dsn = system.file("extdata/nc.gpkg", package= "RGDALDB"))
 #DBI::dbWriteTable(con, "mtcars", mtcars)
 
 tbl(con, "nc.gpkg")
 #> # Source:   table<nc.gpkg> [?? x 15]
-#> # Database: GDALDBConnection
+#> # Database: GDAL2.2.3
+#> #   [GPKG@/perm_storage/home/mdsumner/R/x86_64-pc-linux-gnu-library/3.5/RGDALDB/extdata/nc.gpkg:(1)
 #>     AREA PERIMETER CNTY_ CNTY_ID NAME  FIPS  FIPSNO CRESS_ID BIR74 SID74
 #>    <dbl>     <dbl> <dbl>   <dbl> <chr> <chr>  <dbl>    <int> <dbl> <dbl>
 #>  1 0.114      1.44  1825    1825 Ashe  37009  37009        5  1091     1
@@ -77,7 +117,8 @@ tbl(con, "nc.gpkg")
 
 tbl(con, "nc.gpkg") %>% filter(between(AREA, 0.05, 1))
 #> # Source:   lazy query [?? x 15]
-#> # Database: GDALDBConnection
+#> # Database: GDAL2.2.3
+#> #   [GPKG@/perm_storage/home/mdsumner/R/x86_64-pc-linux-gnu-library/3.5/RGDALDB/extdata/nc.gpkg:(1)
 #>     AREA PERIMETER CNTY_ CNTY_ID NAME  FIPS  FIPSNO CRESS_ID BIR74 SID74
 #>    <dbl>     <dbl> <dbl>   <dbl> <chr> <chr>  <dbl>    <int> <dbl> <dbl>
 #>  1 0.114      1.44  1825    1825 Ashe  37009  37009        5  1091     1
@@ -104,7 +145,8 @@ tbl(con, "nc.gpkg") %>% filter(between(AREA, 0.05, 1))
 
 tbl(con, "nc.gpkg") %>% filter(between(AREA, 0.05, 0.1)) %>% mutate(AREA = AREA * 2)
 #> # Source:   lazy query [?? x 15]
-#> # Database: GDALDBConnection
+#> # Database: GDAL2.2.3
+#> #   [GPKG@/perm_storage/home/mdsumner/R/x86_64-pc-linux-gnu-library/3.5/RGDALDB/extdata/nc.gpkg:(1)
 #>     AREA PERIMETER CNTY_ CNTY_ID NAME  FIPS  FIPSNO CRESS_ID BIR74 SID74
 #>    <dbl>     <dbl> <dbl>   <dbl> <chr> <chr>  <dbl>    <int> <dbl> <dbl>
 #>  1 0.122      1.23  1827    1827 Alle… 37005  37005        3   487     0
@@ -123,7 +165,8 @@ tbl(con, "nc.gpkg") %>% filter(between(AREA, 0.05, 0.1)) %>% mutate(AREA = AREA 
 ## this works, no sense until we have either multiple layers or control over the row_number
 tbl(con, "nc.gpkg") %>% left_join(tbl(con, "nc.gpkg"), "CRESS_ID")
 #> # Source:   lazy query [?? x 29]
-#> # Database: GDALDBConnection
+#> # Database: GDAL2.2.3
+#> #   [GPKG@/perm_storage/home/mdsumner/R/x86_64-pc-linux-gnu-library/3.5/RGDALDB/extdata/nc.gpkg:(1)
 #>    AREA.x PERIMETER.x CNTY_.x CNTY_ID.x NAME.x FIPS.x FIPSNO.x CRESS_ID
 #>     <dbl>       <dbl>   <dbl>     <dbl> <chr>  <chr>     <dbl>    <int>
 #>  1  0.114        1.44    1825      1825 Ashe   37009     37009        5

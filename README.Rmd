@@ -49,9 +49,30 @@ devtools::install_github("mdsumner/RGDALDB")
 
 ## Example
 
-Rough and ready examples
+A pretty good example, ideally no data is read until `collect()` is called.
 
 ```{r example}
+library(dplyr)
+library(DBI)
+library(RGDALDB)
+
+con <- DBI::dbConnect(RGDALDB::GDALDB(), dsn = system.file("shape/nc.shp", package="sf"))
+(nclazy <- tbl(con, "nc"))
+
+library(sf)
+nclazy %>% 
+  dplyr::filter(AREA > .1) %>% 
+  dplyr::select(AREA, PERIMETER, BIR74, FIPS) %>% 
+  collect() %>%  
+  plot()
+
+```
+
+
+
+Rough and ready examples
+
+```{r rough}
 library(dplyr)
 library(DBI)
 con <- DBI::dbConnect(RGDALDB::GDALDB(), dsn = system.file("extdata/nc.gpkg", package= "RGDALDB"))
