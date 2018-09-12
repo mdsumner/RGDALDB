@@ -4,8 +4,8 @@ setMethod("dbGetInfo", "GDALDBConnection", function(dbObj, ...) {
   gdal <- sf::sf_extSoftVersion()["GDAL"]
   layers <- sf::st_layers(dbObj@dsn)
 
-  list(host = dbObj@dsn, serverVersion = gdal,
-       user = gsub("\\s+", "_", layers$driver[1]), layers = length(layers$name))
+  list(dsn = dbObj@dsn, serverVersion = gdal,
+       driver = gsub("\\s+", "_", layers$driver[1]), layers = layers$name)
 } )
 
 
@@ -13,10 +13,8 @@ setMethod("dbGetInfo", "GDALDBConnection", function(dbObj, ...) {
 #' @export
 db_desc.GDALDBConnection <- function(x) {
   info <- dbGetInfo(x)
-  ## NONSENSE for now
-  host <- if (info$host == "") "localhost" else info$host
-
-  paste0("GDAL", info$serverVersion, " [", info$user, "@",
-         host, ":(", info$layers, ")")
+  ## currently printing first layer, not the layer asked for in tbl(con, layer)
+  ##sprintf("GDAL%s %s:%s:%s (of %i %s)", info$serverVersion, info$driver, info$dsn, info$layers[1], length(info$layers), ifelse(length(info$layers) > 1, "layers", "layer"))
+  sprintf("GDAL%s %s:%s:<layer> (of %i %s)", info$serverVersion, info$driver, info$dsn,  length(info$layers), ifelse(length(info$layers) > 1, "layers", "layer"))
 }
 
