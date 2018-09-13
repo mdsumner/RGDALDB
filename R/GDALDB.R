@@ -63,7 +63,8 @@ setMethod("dbConnect", "GDALDBDriver", function(drv, dsn = "", ...) {
 setMethod("show", "GDALDBConnection", function(object) {
   cat("<GDALDBConnection>\n\n")
   cat(sprintf("DataSource: %s\n", object@dsn))
-  cat(sprintf("Driver    : %s\n", unique(sf::st_layers(object@dsn)$driver)))
+  ##cat(sprintf("Driver    : %s\n", unique(sf::st_layers(object@dsn)$driver)))
+  cat(sprintf("Driver    : %s\n", vapour::vapour_driver(object@dsn)))
 })
 #' @rdname GDALDB
 #' @export
@@ -78,7 +79,7 @@ setMethod("dbDisconnect", "GDALDBConnection", function(conn, ...) {
 #' @export
 setClass("GDALDBResult",
          contains = "DBIResult",
-         slots = list(data = "sf")
+         slots = list(data = "tbl_df")
 )
 
 
@@ -90,8 +91,17 @@ setClass("GDALDBResult",
 #' # This is another good place to put examples
 setMethod("dbSendQuery", "GDALDBConnection", function(conn, statement, ...) {
   # some code
-  out <- sf::read_sf(conn@dsn, query = statement, ...)
-  ##print(dim(out))
+  #out <- sf::read_sf(conn@dsn, query = statement, ...)
+  #class(out) <- setdiff(class(out), "sf")
+ # out <- tibble::as_tibble(out)
+  print(statement)
+  geom <- try(tibble::tibble(geometry = as.character(vapour::vapour_read_geometry_text(conn@dsn, sql = statement, textformat = "json"))),
+              silent = TRUE)
+
+  att <- tibble::as_tibble(vapour::vapour_read_attributes(conn@dsn, sql = statement))
+  ## a dummy join still won't work with this
+  if (inherits(geom, "try-error")) geom <- rep(NA_character_, nrow(att))
+  out <- dplyr::bind_cols(att, geom)
   new("GDALDBResult", data = out, ...)
 })
 

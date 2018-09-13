@@ -62,10 +62,12 @@ con <- DBI::dbConnect(RGDALDB::GDALDB(), dsn = system.file("shape/nc.shp", packa
 (nclazy <- tbl(con, "nc"))
 
 library(sf)
-nclazy %>% 
+d <- nclazy %>% 
   dplyr::filter(AREA > .1) %>% 
-  dplyr::select(AREA, PERIMETER, BIR74, FIPS) %>% 
-  collect() %>%  
+  dplyr::select(AREA, PERIMETER, BIR74, FIPS, geometry) %>% 
+  collect()
+d$geometry <- geojsonsf::geojson_sfc(d$geometry)
+d %>%   sf::st_as_sf() %>% 
   plot()
 
 ```
@@ -82,7 +84,7 @@ con <- DBI::dbConnect(RGDALDB::GDALDB(), dsn = system.file("extdata/nc.gpkg", pa
 
 tbl(con, "nc.gpkg")
 
-tbl(con, "nc.gpkg") %>% filter(between(AREA, 0.05, 1))
+dtbl(con, "nc.gpkg") %>% filter(between(AREA, 0.05, 1))
 
 # * summarise(), mutate(), filter() etc: powered by sql_select()
 # * left_join(), inner_join(): powered by sql_join()
@@ -96,7 +98,8 @@ tbl(con, "nc.gpkg") %>% filter(between(AREA, 0.05, 1))
 tbl(con, "nc.gpkg") %>% filter(between(AREA, 0.05, 0.1)) %>% mutate(AREA = AREA * 2)
 
 ## this works, no sense until we have either multiple layers or control over the row_number
-tbl(con, "nc.gpkg") %>% left_join(tbl(con, "nc.gpkg"), "CRESS_ID")
+## plus no-geometry causes problems
+##tbl(con, "nc.gpkg") %>% left_join(tbl(con, "nc.gpkg"), "CRESS_ID")
 
 ## FID is not working, need to wrap for row_number
 #tbl(con, "nc.gpkg") %>% select(geom, AREA)  %>% mutate(ID = FID)
