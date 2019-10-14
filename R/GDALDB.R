@@ -89,6 +89,7 @@ setClass("GDALDBResult",
 #' @examples
 #' # This is another good place to put examples
 setMethod("dbSendQuery", "GDALDBConnection", function(conn, statement, ...) {
+  print(statement)
   # some code
   out <- sf::read_sf(conn@dsn, query = statement, ...)
   ##print(dim(out))
